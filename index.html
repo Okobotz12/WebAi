@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Chat Kai</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <style>
+    body {
+      background-image: url('https://placehold.co/600x800/EEE/CCC?text=Background+Pattern');
+      background-size: cover;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 400px;
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+    }
+    .chat-header, .chat-footer {
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+    }
+    .chat-header {
+      border-bottom: 1px solid #ddd;
+    }
+    .chat-header i {
+      color: #1E90FF;
+      cursor: pointer;
+    }
+    .chat-header .title {
+      flex-grow: 1;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .chat-header .title img {
+      border-radius: 50%;
+    }
+    .chat-header .title span {
+      margin-left: 8px;
+      font-weight: bold;
+    }
+    .chat-header .menu {
+      color: #888;
+      cursor: pointer;
+      position: relative;
+    }
+    .chat-header .dropdown {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 24px;
+      background-color: white;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 5px;
+      z-index: 10;
+    }
+    .chat-header .dropdown a {
+      display: block;
+      padding: 8px 16px;
+      text-decoration: none;
+      color: black;
+    }
+    .chat-header .dropdown a:hover {
+      background-color: #f0f0f0;
+    }
+    .chat-body {
+      flex-grow: 1;
+      padding: 16px;
+      overflow-y: auto;
+    }
+    .chat-body .message {
+      margin-bottom: 16px;
+      display: flex;
+    }
+    .chat-body .message.user {
+      justify-content: flex-end;
+    }
+    .chat-body .message.bot {
+      justify-content: flex-start;
+    }
+    .chat-body .message.welcome {
+      justify-content: center;
+    }
+    .chat-body .message .bubble {
+      max-width: 70%;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      word-wrap: break-word;
+      position: relative;
+    }
+    .chat-body .message.user .bubble {
+      background-color: #DCF8C6;
+      color: #000;
+    }
+    .chat-body .message.bot .bubble {
+      background-color: #E0F7FA;
+      color: #00796B;
+    }
+    .chat-body .message.welcome .bubble {
+      background-color: #E0F7FA;
+      color: #00796B;
+      text-align: center;
+      max-width: 100%;
+      border-radius: 15px;
+    }
+    
+    .chat-body .message .bubble .copy-btn {
+      display: none;
+      margin-left: 8px;
+      color: #1E90FF;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .chat-body .message:hover .bubble .copy-btn {
+      display: inline-block;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid #1E90FF;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+ 
+    .feedback-buttons {
+      margin-top: 8px;
+      font-size: 14px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-start; /* Posisi tombol di bawah teks */
+    }
+    .feedback-buttons button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #888;
+      transition: color 0.3s ease;
+    }
+    .feedback-buttons button:hover {
+      color: #1E90FF;
+    }
+    .feedback-buttons button.liked {
+      color: green;
+    }
+    .feedback-buttons button.unliked {
+      color: red;
+    }
+    .chat-footer {
+      border-top: 1px solid #ddd;
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+    }
+    .chat-footer input {
+      flex-grow: 1;
+      padding: 12px 16px;
+      border: 1px solid #ddd;
+      border-radius: 25px;
+      outline: none;
+      font-size: 16px;
+      margin-right: 8px;
+      transition: border-color 0.3s ease;
+    }
+    .chat-footer input:focus {
+      border-color: #1E90FF;
+    }
+    .chat-footer button {
+      background: none;
+      border: none;
+      color: #1E90FF;
+      cursor: pointer;
+      font-size: 24px;
+      transition: transform 0.3s ease;
+    }
+    .chat-footer button:hover {
+      transform: scale(1.1);
+    }
+    @media (min-width: 768px) {
+      .chat-container {
+        max-width: 600px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <i class="fas fa-arrow-left"></i>
+      <div class="title">
+        <span>OkoAI</span>
+      </div>
+      <div class="menu" onclick="toggleDropdown()">
+        <i class="fas fa-ellipsis-v"></i>
+        <div class="dropdown" id="dropdown">
+          <a href="https://whatsapp.com/channel/0029Vb6Fb1z9Gv7SnQbi2e3Y">✨WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="chat-body" id="chat-body">
+      <div class="message welcome">
+        <div class="bubble">
+          <i class="fas fa-info-circle"></i>
+          Selamat datang di OkoAI! Kami siap membantu Anda dengan berbagai informasi dan layanan. Silakan ketik pesan Anda untuk memulai.
+        </div>
+      </div>
+    </div>
+    <div class="chat-footer">
+      <input id="message-input" placeholder="OkoAi - Message" type="text"/>
+      <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      var dropdown = document.getElementById('dropdown');
+      if (dropdown.style.display === 'none' || dropdown.style.display === '') {
+        dropdown.style.display = 'block';
+      } else {
+        dropdown.style.display = 'none';
+      }
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('message-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+
+      addMessage(message, 'user');
+      input.value = '';
+
+   
+      const loadingMessage = addMessage('', 'bot', true);
+
+      
+      fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://api.hiuraa.my.id/ai/hydromind-logic?text=' + message + '&logic=Kamu+adalah+OkoAi+yang+diciptakan+oleh+Prakoso+Adi+Wibowo.+kamu+adalah+seorang+pria+yang+tampan+dengan+typing+yang+ganteng!+Kamu+itu+sangat+gaul+dan+selalu+menggunakan+huruf+kecil+semua,+setiap+pesan+selalu+diiringi+dengan+emoji+agar+terlihat+lebih+realistis')}`)
+        .then(response => response.json())
+        .then(data => {
+          const apiResponse = JSON.parse(data.contents);
+          if (apiResponse.status) {
+       
+            loadingMessage.remove();
+            addMessage(apiResponse.result, 'bot');
+          } else {
+           
+            loadingMessage.remove();
+            addMessage('Maaf, terjadi kesalahan saat memproses permintaan Anda.', 'bot');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+         
+          loadingMessage.remove();
+          addMessage('Maaf, terjadi kesalahan saat memproses permintaan Anda.', 'bot');
+        });
+    }
+
+    function addMessage(text, sender, isLoading = false) {
+      const chatBody = document.getElementById('chat-body');
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', sender);
+
+      const bubbleDiv = document.createElement('div');
+      bubbleDiv.classList.add('bubble');
+
+      if (isLoading) {
+      
+        bubbleDiv.innerHTML = '<div class="loading"></div>';
+      } else {
+        bubbleDiv.textContent = text;
+
+    
+        const copyBtn = document.createElement('span');
+        copyBtn.classList.add('copy-btn');
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(text).then(() => {
+            alert('Teks berhasil disalin!');
+          }).catch(err => {
+            console.error('Gagal menyalin teks:', err);
+          });
+        };
+        bubbleDiv.appendChild(copyBtn);
+
+        
+        if (sender === 'bot') {
+          const feedbackDiv = document.createElement('div');
+          feedbackDiv.classList.add('feedback-buttons');
+
+          const likeButton = document.createElement('button');
+          likeButton.innerHTML = '<i class="fas fa-thumbs-up"></i>';
+          likeButton.onclick = () => {
+            likeButton.classList.toggle('liked');
+          };
+
+          const unlikeButton = document.createElement('button');
+          unlikeButton.innerHTML = '<i class="fas fa-thumbs-down"></i>';
+          unlikeButton.onclick = () => {
+            unlikeButton.classList.toggle('unliked');
+          };
+
+          feedbackDiv.appendChild(likeButton);
+          feedbackDiv.appendChild(unlikeButton);
+          messageDiv.appendChild(feedbackDiv);        }
+      }
+
+      messageDiv.appendChild(bubbleDiv);
+      chatBody.appendChild(messageDiv);
+
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      return messageDiv;
+    }
+  </script>
+</body>
+</html>
